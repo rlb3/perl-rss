@@ -10,8 +10,10 @@
 (def db (db/make-connection "perlrss" :host "127.0.0.1"))
 
 (def settings (json/read-json (reader (file "/root/perl-rss/settings.json"))))
+(def perl-url "http://search.cpan.org/uploads.rdf")
 
-(def sess (mail/mk-Sess {:username (:username settings)
+(defn make-mail-session []
+  (mail/mk-Sess {:username (:username settings)
                          :pass (:pass settings)
                          :ssl? true
                          :in-host (:in-host settings)
@@ -20,8 +22,6 @@
                          :out-host (:out-host settings)
                          :out-protocol "smtp"
                          :out-port 465}))
-
-(def perl-url "http://search.cpan.org/uploads.rdf")
 
 (defn get-new-perl-modules-list []
   (drop 2 (map (fn [map] (first (reverse (str/split (:rdf:about map) #"/"))))
