@@ -9,7 +9,7 @@
 
 (def db (db/make-connection "perlrss" :host "127.0.0.1"))
 
-(def settings (json/read-json (reader (file "/root/perl-rss/settings.json"))))
+(def settings (json/read-json (reader (file "/perl-rss/settings.json"))))
 
 (def sess (mail/mk-Sess {:username (:username settings)
                          :pass (:pass settings)
