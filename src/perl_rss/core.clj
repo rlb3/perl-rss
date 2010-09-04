@@ -68,14 +68,20 @@
                        :version (:version map)})))
 
 (defn mail-message [modules]
-  (map (fn [m] (format "%s-%s\n" (:name m) (:version m))) modules))
+  (map (fn [m]
+         (let [name (:name m)
+               version (:version m)
+               matcher (re-matcher #"_" version)
+               dev (re-find matcher)]
+           (str (format "%s-%s" name version) (if dev " DEVELEMENT VERSION\n" "")))) modules))
 
 (defn reset-seen [] (db/with-mongo db
                       (db/drop-coll! "seen")))
 
 (defn send-email []
   (when (not-empty (unseen-modules))
-    (let [mail-body (apply concat (mail-message (unseen-modules)))]
+    (let [mail-body (apply concat (mail-message (unseen-modules)))
+          sess (make-mail-session)]
       (mail/send-msg sess (mail/text-msg sess {:to-coll (:to-coll settings)
                                                :subject "Updated CPAN Modules"
                                                :body (apply str mail-body)}))
@@ -90,6 +96,6 @@
   (reset-seen)
   (get-new-perl-modules-map)
   (find-updated-modules)
+  (mail-message (unseen-modules))
   (-main)
-  
   )
