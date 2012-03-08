@@ -1,16 +1,17 @@
 (ns perl-rss.core
-  (:gen-class)
   (:use [clojure.java.io])
-  (:require [clojure.contrib.lazy-xml :as xml]
-            [clojure.contrib.str-utils2 :as str]
+  (:require [clojure.data.xml :as xml]
+            [clojure.data.json :as json]
+            [clojure [string :as str]]
             [somnium.congomongo :as db]
-            [clj-mail.core :as mail]
-            [clojure.contrib.json :as json]))
+            [clj-mail.core :as mail]))
+
 
 (def db (db/make-connection "perlrss" :host "127.0.0.1"))
 
-(def settings (json/read-json (reader (file "/root/perl-rss/settings.json"))))
+(def settings (json/read-json (reader (file "settings.json"))))
 (def perl-url "http://search.cpan.org/uploads.rdf")
+
 
 (defn make-mail-session []
   (mail/mk-Sess {:username (:username settings)
@@ -26,7 +27,7 @@
 (defn get-new-perl-modules-list []
   (drop 2 (map (fn [map] (first (reverse (str/split (:rdf:about map) #"/"))))
                (filter :rdf:about
-                       (map :attrs (xml/parse-seq perl-url))))))
+                       (map :attrs (xml/parse (reader perl-url)))))))
 
 (defn get-new-perl-modules-map []
   (map
