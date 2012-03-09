@@ -1,10 +1,8 @@
 (ns perl-rss.core
   (:use [clojure.java.io]
-        [clojure.core])
-  (:require [clojure.data.xml :as xml]
-            [clojure.data.json :as json]
-            [clojure [string :as str]]
-            [somnium.congomongo :as db]
+        [clojure.core]
+        [perl-rss.modules])
+  (:require [somnium.congomongo :as db]
             [clj-mail.core :as mail]))
 
 (def db (db/make-connection "perlrss" :host "127.0.0.1"))
@@ -21,34 +19,6 @@
                          :out-host (:out-host settings)
                          :out-protocol "smtp"
                          :out-port 465}))
-
-(def perl-url "http://search.cpan.org/uploads.rdf")
-
-(defn- get-value [node]
-  (first (:content node)))
-
-(defn rss-title [entry]
-  (get-value (first (filter #(= :title (:tag %))
-                            (:content entry)))))
-
-(defn get-new-perl-modules-list []
-  (map #(rss-title %)
-       (filter #(= :item (:tag %))
-               (xml-seq (xml/parse (reader perl-url))))))
-
-(defn get-new-perl-modules-map []
-  (map
-   (fn [v] (let [version (last v)
-                name (pop v)]
-            {:name (str/join "::" name)
-             :version version }))
-   (map #(vec (str/split % #"-"))
-        (get-new-perl-modules-list))))
-
-(defn find-perl-module [s]
-  (filter #(if (.equals s (:name %))
-             true false)
-          (get-new-perl-modules-map)))
 
 (defn modules []
   (map :name (db/with-mongo db
