@@ -4,6 +4,6 @@
                  [org.clojure/data.xml "0.0.3"]
                  [org.clojure/data.json "0.1.2"]
                  [congomongo "0.1.8"]
-                 [clj-mail "0.1.5"]]
+                 [org.clojars.doo/postal "1.8-SNAPSHOT"]]
   :dev-dependencies [[swank-clojure "1.4.0-SNAPSHOT"]]
   :main perl-rss.core)

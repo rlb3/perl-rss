@@ -3,29 +3,18 @@
         [clojure.core]
         [perl-rss.modules])
   (:require [somnium.congomongo :as db]
-            [clj-mail.core :as mail]))
+            [clojure.data.json :as json]
+            [postal.core :as mail]
+            [clojure.string :as str]))
 
 (def db (db/make-connection "perlrss" :host "127.0.0.1"))
-
 (def settings (json/read-json (reader (file "settings.json"))))
-
-(defn make-mail-session []
-  (mail/mk-Sess {:username (:username settings)
-                         :pass (:pass settings)
-                         :ssl? true
-                         :in-host (:in-host settings)
-                         :in-protocol "imap"
-                         :in-port 993
-                         :out-host (:out-host settings)
-                         :out-protocol "smtp"
-                         :out-port 465}))
-
-(defn modules []
-  (map :name (db/with-mongo db
-               (db/fetch :modules))))
+(def modules (json/read-json (reader (file "modules.json"))))
 
 (defn find-updated-modules []
-  (first (filter not-empty (map find-perl-module (modules)))))
+  (first (filter not-empty (map find-perl-module modules))))
+
+(def updated-modules (find-updated-modules))
 
 (defn seen-modules [module-map]
   (let [name (:name module-map)
@@ -38,7 +27,7 @@
 (defn unseen-modules []
   (filter #(if (empty? (seen-modules %))
              true false)
-          (find-updated-modules)))
+          updated-modules))
 
 (defn update-database [map]
   (db/with-mongo db
@@ -56,17 +45,37 @@
 (defn reset-seen [] (db/with-mongo db
                       (db/drop-coll! "seen")))
 
-(defn send-email []
-  (when (not-empty (unseen-modules))
-    (let [mail-body (apply concat (mail-message (unseen-modules)))
-          sess (make-mail-session)]
-      (mail/send-msg sess (mail/text-msg sess {:to-coll (:to-coll settings)
-                                               :subject "Updated CPAN Modules"
-                                               :body (apply str mail-body)}))
-      (apply update-database (unseen-modules))))
-  (db/close-connection db))
+(defn send-email [email body]
+  (mail/send-message #^{:host (:out-host settings)
+                   :user (:username settings)
+                   :pass (:pass settings)
+                   :ssl 1}
+                           {:from (:username settings)
+                            :to email
+                            :subject "Updated CPAN Modules"
+                            :body body}))
 
-(defn -main [& args] (send-email))
+(defn send-module-email [email u]
+  (when (not-empty u)
+    (let [mail-body (str/join "\n" (mail-message u))]
+      (send-email email mail-body))))
+
+(defn send-all-module-email [u]
+  (map #(send-module-email % u)
+       (map :email
+              (db/with-mongo db
+                (db/fetch :emails)))))
+
+(defn clean-up [u]
+  (when (not-empty u)
+    (apply update-database u)))
+
+(defn -main [& args]
+  (let [unseen (unseen-modules)]
+    (clean-up unseen)
+    (send-all-module-email unseen)))
+
+
 
 
 (comment
@@ -75,5 +84,6 @@
   (get-new-perl-modules-map)
   (find-updated-modules)
   (mail-message (unseen-modules))
+  unseen
   (-main)
   )
