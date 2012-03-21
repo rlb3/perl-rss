@@ -34,4 +34,3 @@
   (filter #(if (.equals s (:name %))
              true false)
           module-map))
-module-map
