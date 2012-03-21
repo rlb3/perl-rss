@@ -28,7 +28,10 @@
    (map #(vec (str/split % #"-"))
         (get-new-perl-modules-list))))
 
+(def module-map (get-new-perl-modules-map))
+
 (defn find-perl-module [s]
   (filter #(if (.equals s (:name %))
              true false)
-          (get-new-perl-modules-map)))
+          module-map))
+module-map

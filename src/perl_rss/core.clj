@@ -72,18 +72,6 @@
 
 (defn -main [& args]
   (let [unseen (unseen-modules)]
-    (clean-up unseen)
-    (send-all-module-email unseen)))
-
-
-
-
-(comment
-  settings
-  (reset-seen)
-  (get-new-perl-modules-map)
-  (find-updated-modules)
-  (mail-message (unseen-modules))
-  unseen
-  (-main)
-  )
+       (do
+        (clean-up unseen)
+        (send-all-module-email unseen))))
