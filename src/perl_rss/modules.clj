@@ -13,7 +13,6 @@
 (defn rss-title [entry]
   (get-value (first (filter #(= :title (:tag %))
                             (:content entry)))))
-
 (defn get-new-perl-modules-list []
   (map #(rss-title %)
        (filter #(= :item (:tag %))
@@ -22,7 +21,7 @@
 (defn get-new-perl-modules-map []
   (map
    (fn [v] (let [version (last v)
-                 name (pop v)]
+                name (pop v)]
              {:name (str/join "::" name)
               :version version }))
    (map #(vec (str/split % #"-"))

@@ -42,18 +42,15 @@
                dev (re-find matcher)]
            (str (format "%s-%s" name version) (if dev " DEVELEMENT VERSION\n" "")))) modules))
 
-(defn reset-seen [] (db/with-mongo db
-                      (db/drop-coll! "seen")))
+(defn reset-seen []
+  (db/with-mongo db
+    (db/drop-coll! "seen")))
 
 (defn send-email [email body]
-  (mail/send-message #^{:host (:out-host settings)
-                   :user (:username settings)
-                   :pass (:pass settings)
-                   :ssl 1}
-                           {:from (:username settings)
-                            :to email
-                            :subject "Updated CPAN Modules"
-                            :body body}))
+  (mail/send-message {:from (:username settings)
+                      :to email
+                      :subject "Updated CPAN Modules"
+                      :body body}))
 
 (defn send-module-email [email u]
   (when (not-empty u)
