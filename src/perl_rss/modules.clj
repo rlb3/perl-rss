@@ -13,8 +13,9 @@
 (defn rss-title [entry]
   (get-value (first (filter #(= :title (:tag %))
                             (:content entry)))))
+
 (defn get-new-perl-modules-list []
-  (map #(rss-title %)
+  (map rss-title
        (filter #(= :item (:tag %))
                (xml-seq (xml/parse (reader perl-url))))))
 

@@ -8,6 +8,7 @@
             [clojure.string :as str]))
 
 (def db (db/make-connection "perlrss" :host "127.0.0.1"))
+(db/set-connection! db)
 (def settings (json/read-json (reader (file "settings.json"))))
 (def modules (json/read-json (reader (file "modules.json"))))
 
@@ -29,10 +30,10 @@
              true false)
           updated-modules))
 
-(defn update-database [map]
+(defn update-database [& maps]
   (db/with-mongo db
-    (db/insert! :seen {:name (:name map)
-                       :version (:version map)})))
+    (map (fn [m] (db/insert! :seen {:name (:name m)
+                                    :version (:version m)})) maps)))
 
 (defn mail-message [modules]
   (map (fn [m]
