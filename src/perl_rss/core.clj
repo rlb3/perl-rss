@@ -23,7 +23,7 @@
                version (:version m)
                matcher (re-matcher #"_" version)
                dev (re-find matcher)]
-           (str (format "%s-%s" name version) (if dev " DEVELEMENT VERSION\n" "")))) modules))
+           (str (format "%s-%s" name version) (if dev " DEVELOPMENT VERSION\n" "")))) modules))
 
 (defn send-email [email body]
   (mail/send-message {:from (:username settings)
